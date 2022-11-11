@@ -1,17 +1,17 @@
 #include <sys/socket.h>
 #include <netinet/in.h>
-#include <arpa/inet.h> 
+#include <arpa/inet.h>
 #include <string.h>
 #include <unistd.h>
 #include <stdio.h>
 
 #define PORT 5001
 
-// TCP server implementation
+// TCP client-side implementation
 int main()
 {
     int sockfd;
-    char *message = "hello there my dear server!";
+    char *message = "hello there, server!";
     char buffer[1024];
 
     struct sockaddr_in client_address;
@@ -26,27 +26,31 @@ int main()
 
     if ((sockfd = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP)) < 0)
     {
-        perror("Socket opening error\n");
+        perror("Socket opening error");
         return -1;
     }
 
-    if (connect(sockfd, (struct sockaddr*)&server_address, sizeof(server_address)) < 0)
+    if ((bind(sockfd, (struct sockaddr *)&client_address, sizeof(client_address))) < 0)
     {
-        perror("Connection Failed\n");
+        printf("Bind error");
+        return -1;
+    }
+
+    if (connect(sockfd, (struct sockaddr *)&server_address, sizeof(server_address)) < 0)
+    {
+        perror("Connection failed");
         return -1;
     }
 
     // finally we can send the message
     send(sockfd, message, strlen(message), 0);
-
-    if (recv(sockfd, &buffer, strlen(buffer), 0) == -1)
+    if (recv(sockfd, &buffer, sizeof(buffer), 0) == -1)
     {
-        perror("Received message error\n");
+        perror("Received message error");
         return -1;
     }
+    printf("Server message: %s", buffer);
 
-    printf("Hello message sent successfully!\n");
-    // close the client socket
     close(sockfd);
     return 0;
 }
